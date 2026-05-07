@@ -1,0 +1,14 @@
+{
+  "kasi@gmail.com": {
+    "username": "kasi",
+    "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+  },
+  "nirmal@gmail.com": {
+    "username": "nirmal",
+    "password": "scrypt:32768:8:1$GzUhQWwSebRSEGu1$86fa78d897d47ab6ab16f358810f33c0fdb618224bf59e76c6f879b7aebbd8250fa518da009468a767f89c1026957bcca507402ad17819407d14049159e9faad"
+  },
+  "test@gmail.com": {
+    "username": "test",
+    "password": "scrypt:32768:8:1$7Xn3xet8rtMWtBPo$68d84d99486b8f4528073993457385012969b089c33935ab74c2339bb1b630cf150cccb5255b74759b5e931f1c31b25d566d4e958191ed013071fd203045811b"
+  }
+}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Login - SolarGuard AI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>SolarPanel Defects AI</h1>
+            <p>Crack & Soiled Detection System</p>
+        </div>
+
+        <div class="auth-form">
+            <h2>Welcome Back</h2>
+            
+            {% if error %}
+                <div class="alert alert-error">
+                    <span class="alert-icon">❌</span>
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            {% if request.args.get('message') %}
+                <div class="alert alert-success">
+                    <span class="alert-icon">✅</span>
+                    {{ request.args.get('message') }}
+                </div>
+            {% endif %}
+
+            <form method="POST" class="form-group">
+                <div class="form-field">
+                    <label for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

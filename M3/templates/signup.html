@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - SolarGuard AI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>☀️ SolarGuard AI</h1>
+            <p>Crack & Soil Detection System</p>
+        </div>
+
+        <div class="auth-form">
+            <h2>Create Account</h2>
+            
+            {% if error %}
+                <div class="alert alert-error">
+                    <span class="alert-icon">❌</span>
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" class="form-group">
+                <div class="form-field">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Choose a username"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="At least 6 characters"
+                        required
+                        minlength="6"
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        placeholder="Re-enter your password"
+                        required
+                        minlength="6"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Create Account
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

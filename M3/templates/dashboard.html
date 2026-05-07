@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SolarGuard AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>SolarGuard</h1>
+            <p class="sidebar-subtitle">Smart Panel Monitor</p>
+        </div>
+
+        <nav class="sidebar-nav primary-nav">
+            <button class="nav-item active" type="button" data-view="home-view">
+                <span class="nav-icon">🏠</span>
+                <span>
+                    <strong>Dashboard Home</strong>
+                    <small>Navigate modules</small>
+                </span>
+            </button>
+            <button class="nav-item" type="button" data-view="detection-view">
+                <span class="nav-icon">📷</span>
+                <span>
+                    <strong>Crack/Soiled Detection</strong>
+                    <small>Live camera + ESP32 trigger</small>
+                </span>
+            </button>
+            <button class="nav-item" type="button" data-view="sensor-view">
+                <span class="nav-icon">📡</span>
+                <span>
+                    <strong>ESP32 Sensor Dashboard</strong>
+                    <small>Live telemetry + history</small>
+                </span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">Sign Out</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="dashboard-header">
+            <div class="header-title">
+                <h2>Welcome, {{ username }}</h2>
+                <p>Detection and ESP32 Monitoring Console</p>
+            </div>
+            <div class="header-user">
+                <span class="user-name">{{ username }}</span>
+                <div class="user-avatar">{{ username[0].upper() }}</div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <section id="home-view" class="primary-view active">
+                <section class="activity-section module-nav-section">
+                    <h3>Choose Dashboard Module</h3>
+                    <div class="module-nav-grid">
+                        <button type="button" class="module-nav-card" data-target-view="detection-view">
+                            <div class="module-icon">📷</div>
+                            <h4>Crack/Soiled Detection</h4>
+                            <p>Live camera + ESP32 trigger</p>
+                        </button>
+                        <button type="button" class="module-nav-card" data-target-view="sensor-view">
+                            <div class="module-icon">📡</div>
+                            <h4>ESP32 Sensor Dashboard</h4>
+                            <p>Live telemetry + history</p>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="activity-section home-content-section">
+                    <h3>Platform Overview</h3>
+                    <div class="home-kpi-grid">
+                        <article class="home-kpi-card">
+                            <span class="home-kpi-label">Detection Engine</span>
+                            <strong class="home-kpi-value">YOLO + Live Camera</strong>
+                            <p>Real-time cracked/soiled inference with smooth frame rendering.</p>
+                        </article>
+                        <article class="home-kpi-card">
+                            <span class="home-kpi-label">ESP32 Trigger</span>
+                            <strong class="home-kpi-value">Serial Command</strong>
+                            <p>On class hit, command sent instantly: <code>C</code> for crack and <code>S</code> for soiled.</p>
+                        </article>
+                        <article class="home-kpi-card">
+                            <span class="home-kpi-label">Data Logging</span>
+                            <strong class="home-kpi-value">Local History</strong>
+                            <p>Sensor records are timestamped and persisted for analysis.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="activity-section home-content-section">
+                    <h3>How To Use</h3>
+                    <div class="home-guide-grid">
+                        <article class="home-guide-item">
+                            <span>1</span>
+                            <div>
+                                <h4>Open Detection Module</h4>
+                                <p>Start camera and verify cracked/soiled counts update live.</p>
+                            </div>
+                        </article>
+                        <article class="home-guide-item">
+                            <span>2</span>
+                            <div>
+                                <h4>Check Sensor Dashboard</h4>
+                                <p>Review live metrics, charts, and latest telemetry timestamp.</p>
+                            </div>
+                        </article>
+                        <article class="home-guide-item">
+                            <span>3</span>
+                            <div>
+                                <h4>Review History</h4>
+                                <p>Use history table and bars to compare trends and event counts.</p>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </section>
+
+            <section id="detection-view" class="primary-view">
+                <section class="activity-section detection-section">
+                    <h3>Crack / Soiled Detection</h3>
+                    <div class="detection-actions">
+                        <button id="start-detection-btn" class="btn btn-primary" type="button">Start Detection</button>
+                        <button id="stop-detection-btn" class="btn btn-secondary" type="button">Stop Detection</button>
+                    </div>
+                    <div class="detection-grid">
+                        <div class="detection-stats">
+                            <p><strong>Cracked:</strong> <span id="detect-cracked">0</span></p>
+                            <p><strong>Soiled:</strong> <span id="detect-soiled">0</span></p>
+                            <p><strong>FPS:</strong> <span id="detect-fps">0</span></p>
+                            <p><strong>Last Serial:</strong> <span id="detect-last-command">-</span></p>
+                            <p><strong>Status:</strong> <span id="detect-status">idle</span></p>
+                        </div>
+                        <div class="detection-frame-wrap">
+                            <img id="detect-frame" class="detection-frame" src="" alt="Detection stream">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="activity-section animated-content">
+                    <h3>Detection Workflow</h3>
+                    <div class="feature-flow">
+                        <article class="flow-card">
+                            <span class="flow-step">01</span>
+                            <h4>Start Camera</h4>
+                            <p>Open live stream and begin class inference for cracked and soiled regions.</p>
+                        </article>
+                        <article class="flow-card">
+                            <span class="flow-step">02</span>
+                            <h4>Analyze Frames</h4>
+                            <p>Model tracks each frame and updates counts with smooth real-time rendering.</p>
+                        </article>
+                        <article class="flow-card">
+                            <span class="flow-step">03</span>
+                            <h4>Send Trigger</h4>
+                            <p>When a class is detected, command is sent to ESP32 (`C` / `S`) with cooldown.</p>
+                        </article>
+                    </div>
+                </section>
+            </section>
+
+            <section id="sensor-view" class="primary-view">
+                <nav class="secondary-nav">
+                    <button class="secondary-nav-item active" type="button" data-sensor-view="sensor-live-view">Live Sensors</button>
+                    <button class="secondary-nav-item" type="button" data-sensor-view="sensor-history-view">History</button>
+                </nav>
+
+                <section id="sensor-live-view" class="sensor-subview active">
+                    <section class="stats-grid">
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">🌡️</span>Temp</h3><p id="metric-Temp" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">🔋</span>Volt</h3><p id="metric-Volt" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">⚡</span>Current</h3><p id="metric-Current" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">🌫️</span>Dust</h3><p id="metric-Dust" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">🌬️</span>Airquality</h3><p id="metric-Airquality" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">🧭</span>Airqualitystatus</h3><p id="metric-Airqualitystatus" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">🌀</span>blowercount</h3><p id="metric-blowercount" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">💧</span>liquidcount</h3><p id="metric-liquidcount" class="stat-value">0</p></div></div>
+                        <div class="stat-card"><div class="stat-info"><h3><span class="sensor-icon">✉️</span>smscount</h3><p id="metric-smscount" class="stat-value">0</p></div></div>
+                    </section>
+
+                    <section class="activity-section">
+                        <h3>Latest Update</h3>
+                        <p id="latest-timestamp" class="empty-state">No ESP32 data yet</p>
+                    </section>
+
+                    <section class="activity-section">
+                        <h3>Visual Analytics</h3>
+                        <div class="analytics-grid">
+                            <article class="chart-card">
+                                <h4>Sensor Trend (Recent 20)</h4>
+                                <canvas id="sensor-trend-chart"></canvas>
+                            </article>
+                            <article class="chart-card">
+                                <h4>Current Distribution</h4>
+                                <canvas id="sensor-mix-chart"></canvas>
+                            </article>
+                        </div>
+                        <div class="kpi-strip">
+                            <div class="kpi-chip">
+                                <span class="kpi-label">Records</span>
+                                <span id="kpi-records" class="kpi-value">0</span>
+                            </div>
+                            <div class="kpi-chip">
+                                <span class="kpi-label">Avg Temp</span>
+                                <span id="kpi-avg-temp" class="kpi-value">0</span>
+                            </div>
+                            <div class="kpi-chip">
+                                <span class="kpi-label">Avg Volt</span>
+                                <span id="kpi-avg-volt" class="kpi-value">0</span>
+                            </div>
+                            <div class="kpi-chip">
+                                <span class="kpi-label">Avg Current</span>
+                                <span id="kpi-avg-current" class="kpi-value">0</span>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+                <section id="sensor-history-view" class="sensor-subview">
+                    <section class="activity-section">
+                        <h3>History Bar (latest sample)</h3>
+                        <div id="bar-chart" class="bar-chart"></div>
+                    </section>
+                    <section class="activity-section history-table-wrap">
+                        <h3>Recent ESP32 Records</h3>
+                        <div class="table-scroll">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Temp</th>
+                                        <th>Volt</th>
+                                        <th>Current</th>
+                                        <th>Dust</th>
+                                        <th>Airquality</th>
+                                        <th>Airqualitystatus</th>
+                                        <th>blowercount</th>
+                                        <th>liquidcount</th>
+                                        <th>smscount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-body">
+                                    <tr><td colspan="10">No data</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="activity-section animated-content">
+                    <h3>System Insights</h3>
+                    <div class="insight-grid">
+                        <article class="insight-card">
+                            <h4>Live Monitoring</h4>
+                            <p>Sensor cards auto-refresh every few seconds from local ESP32 feed.</p>
+                        </article>
+                        <article class="insight-card">
+                            <h4>Local History</h4>
+                            <p>All records are timestamped and stored locally for quick review.</p>
+                        </article>
+                        <article class="insight-card">
+                            <h4>Bar Visualization</h4>
+                            <p>Latest values are shown in dynamic bars to compare metrics instantly.</p>
+                        </article>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const metricKeys = [
+  "Temp", "Volt", "Current", "Dust", "Airquality",
+  "Airqualitystatus", "blowercount", "liquidcount", "smscount"
+];
+let trendChart = null;
+let mixChart = null;
+
+function toNumber(v) {
+  if (typeof v === "string") {
+    const s = v.trim().toUpperCase();
+    if (s === "A") return 1;
+    if (s === "B") return 2;
+  }
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function setPrimaryView(viewId) {
+  document.querySelectorAll(".primary-view").forEach((el) => el.classList.remove("active"));
+  document.querySelectorAll(".primary-nav .nav-item").forEach((el) => el.classList.remove("active"));
+  document.getElementById(viewId)?.classList.add("active");
+  document.querySelector(`.primary-nav .nav-item[data-view="${viewId}"]`)?.classList.add("active");
+}
+
+function setSensorSubview(viewId) {
+  document.querySelectorAll(".sensor-subview").forEach((el) => el.classList.remove("active"));
+  document.querySelectorAll(".secondary-nav-item").forEach((el) => el.classList.remove("active"));
+  document.getElementById(viewId)?.classList.add("active");
+  document.querySelector(`.secondary-nav-item[data-sensor-view="${viewId}"]`)?.classList.add("active");
+}
+
+document.querySelectorAll(".primary-nav .nav-item[data-view]").forEach((btn) => {
+  btn.addEventListener("click", () => setPrimaryView(btn.dataset.view));
+});
+
+document.querySelectorAll(".module-nav-card[data-target-view]").forEach((card) => {
+  card.addEventListener("click", () => setPrimaryView(card.dataset.targetView));
+});
+
+document.querySelectorAll(".secondary-nav-item[data-sensor-view]").forEach((btn) => {
+  btn.addEventListener("click", () => setSensorSubview(btn.dataset.sensorView));
+});
+
+async function loadLatest() {
+  try {
+    const res = await fetch("/api/esp32/latest", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    metricKeys.forEach((key) => {
+      const el = document.getElementById(`metric-${key}`);
+      if (el) el.textContent = data[key] ?? 0;
+    });
+
+    const ts = data.timestamp ? new Date(data.timestamp).toLocaleString() : "No ESP32 data yet";
+    document.getElementById("latest-timestamp").textContent = ts;
+    renderBars(data);
+  } catch (e) {}
+}
+
+function renderBars(data) {
+  const chart = document.getElementById("bar-chart");
+  if (!chart) return;
+
+  const values = metricKeys.map((k) => toNumber(data[k]));
+  const max = Math.max(1, ...values);
+  chart.innerHTML = "";
+
+  metricKeys.forEach((key) => {
+    const value = toNumber(data[key]);
+    const pct = Math.max(3, (value / max) * 100);
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `
+      <span class="bar-label">${key}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <span class="bar-value">${value}</span>
+    `;
+    chart.appendChild(row);
+  });
+}
+
+function average(items, key) {
+  if (!items.length) return 0;
+  const total = items.reduce((sum, item) => sum + toNumber(item[key]), 0);
+  return total / items.length;
+}
+
+function initChartsIfNeeded() {
+  if (!window.Chart) return;
+  if (!trendChart) {
+    const trendCtx = document.getElementById("sensor-trend-chart");
+    if (trendCtx) {
+      trendChart = new Chart(trendCtx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            { label: "Temp", data: [], borderColor: "#ff9f1a", backgroundColor: "rgba(255,159,26,0.15)", tension: 0.35, fill: true },
+            { label: "Volt", data: [], borderColor: "#35d0ff", backgroundColor: "rgba(53,208,255,0.12)", tension: 0.35, fill: false },
+            { label: "Current", data: [], borderColor: "#9cff57", backgroundColor: "rgba(156,255,87,0.12)", tension: 0.35, fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: "#d7dbf0" } } },
+          scales: {
+            x: { ticks: { color: "#bfc5dd" }, grid: { color: "rgba(255,255,255,0.08)" } },
+            y: { ticks: { color: "#bfc5dd" }, grid: { color: "rgba(255,255,255,0.08)" } }
+          }
+        }
+      });
+    }
+  }
+
+  if (!mixChart) {
+    const mixCtx = document.getElementById("sensor-mix-chart");
+    if (mixCtx) {
+      mixChart = new Chart(mixCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Dust", "Airquality", "blowercount", "liquidcount", "smscount"],
+          datasets: [{
+            data: [0, 0, 0, 0, 0],
+            backgroundColor: ["#ff9f1a", "#35d0ff", "#9cff57", "#ff6b8a", "#b58cff"],
+            borderColor: "rgba(0,0,0,0)"
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: "#d7dbf0" } } }
+        }
+      });
+    }
+  }
+}
+
+function updateAnalytics(items) {
+  initChartsIfNeeded();
+  if (!items.length) return;
+
+  const recent = items.slice(-20);
+  const labels = recent.map((it, idx) => {
+    if (!it.timestamp) return `${idx + 1}`;
+    const d = new Date(it.timestamp);
+    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  });
+
+  if (trendChart) {
+    trendChart.data.labels = labels;
+    trendChart.data.datasets[0].data = recent.map((it) => toNumber(it.Temp));
+    trendChart.data.datasets[1].data = recent.map((it) => toNumber(it.Volt));
+    trendChart.data.datasets[2].data = recent.map((it) => toNumber(it.Current));
+    trendChart.update("none");
+  }
+
+  const latest = items[items.length - 1];
+  if (mixChart) {
+    mixChart.data.datasets[0].data = [
+      toNumber(latest.Dust),
+      toNumber(latest.Airquality),
+      toNumber(latest.blowercount),
+      toNumber(latest.liquidcount),
+      toNumber(latest.smscount)
+    ];
+    mixChart.update("none");
+  }
+
+  document.getElementById("kpi-records").textContent = String(items.length);
+  document.getElementById("kpi-avg-temp").textContent = average(items, "Temp").toFixed(1);
+  document.getElementById("kpi-avg-volt").textContent = average(items, "Volt").toFixed(1);
+  document.getElementById("kpi-avg-current").textContent = average(items, "Current").toFixed(1);
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch("/api/esp32/history?limit=20", { cache: "no-store" });
+    if (!res.ok) return;
+    const payload = await res.json();
+    const items = payload.items || [];
+    const tbody = document.getElementById("history-body");
+    if (!tbody) return;
+
+    if (!items.length) {
+      tbody.innerHTML = "<tr><td colspan='10'>No data</td></tr>";
+      return;
+    }
+
+    tbody.innerHTML = items.slice().reverse().map((item) => `
+      <tr>
+        <td>${item.timestamp ? new Date(item.timestamp).toLocaleString() : "-"}</td>
+        <td>${item.Temp ?? 0}</td>
+        <td>${item.Volt ?? 0}</td>
+        <td>${item.Current ?? 0}</td>
+        <td>${item.Dust ?? 0}</td>
+        <td>${item.Airquality ?? 0}</td>
+        <td>${item.Airqualitystatus ?? 0}</td>
+        <td>${item.blowercount ?? 0}</td>
+        <td>${item.liquidcount ?? 0}</td>
+        <td>${item.smscount ?? 0}</td>
+      </tr>
+    `).join("");
+    updateAnalytics(items);
+  } catch (e) {}
+}
+
+async function startDetection() {
+  await fetch("/api/detection/start", { method: "POST" });
+  const img = document.getElementById("detect-frame");
+  if (img) img.src = "/video_feed?t=" + Date.now();
+}
+
+async function stopDetection() {
+  await fetch("/api/detection/stop", { method: "POST" });
+}
+
+async function loadDetectionStatus() {
+  try {
+    const res = await fetch("/api/detection/status", { cache: "no-store" });
+    if (!res.ok) return;
+    const s = await res.json();
+    document.getElementById("detect-cracked").textContent = s.cracked ?? 0;
+    document.getElementById("detect-soiled").textContent = s.soiled ?? 0;
+    document.getElementById("detect-fps").textContent = s.fps ?? 0;
+    document.getElementById("detect-last-command").textContent = s.last_command || "-";
+    document.getElementById("detect-status").textContent = s.message || "idle";
+    if (!s.running) {
+      const img = document.getElementById("detect-frame");
+      if (img) img.removeAttribute("src");
+    }
+  } catch (e) {}
+}
+
+document.getElementById("start-detection-btn")?.addEventListener("click", startDetection);
+document.getElementById("stop-detection-btn")?.addEventListener("click", stopDetection);
+
+loadLatest();
+loadHistory();
+loadDetectionStatus();
+setInterval(loadLatest, 2000);
+setInterval(loadHistory, 4000);
+setInterval(loadDetectionStatus, 1000);
+</script>
+{% endblock %}
